@@ -1,0 +1,45 @@
+version: "3"
+
+services:
+  webserver:
+    image: nginx:1.27.0-perl
+    ports:
+      - "80:80" # HOST:CONTAINER
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/nginx.conf
+      - ./app:/app
+
+  php:
+    image: "my-php"
+    build: services/php
+    env_file:
+      - .env
+    volumes:
+      - ./app:/app
+
+  db:
+    image: mariadb:11.2.4-jammy
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - ./mysqldata:/var/lib/mysql
+    ports:
+      - 3306:3306
+
+  phpmyadmin:
+    depends_on:
+      - db
+    image: phpmyadmin:5.2
+    volumes:
+      - ./phpmyadmindata:/var/lib/mysql
+    environment:
+      PMA_ARBITRARY: 1
+      # PM_HOST: db
+    ports:
+      - "8080:80"
+
+# volumes:
+#   mysqldata: {}

@@ -1,0 +1,9 @@
+mysqldata
+phpmyadmindata
+.vscode
+
+.env
+
+Notes.md
+
+app/public/scripts/get-uf.php
