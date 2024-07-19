@@ -21,7 +21,7 @@
               <div class="col-12">
                 <label for="baseSalary" class="form-label">Sueldo base(*)</label>
                 <input type="text" class="form-control formatCurrency" id="baseSalary" name="baseSalary" placeholder=""
-                  value="" required>
+                  value="" required maxlength="11">
                 <div class="invalid-feedback">
                   Sueldo base es requerido
                 </div>
@@ -29,7 +29,7 @@
               <div class="col-12">
                 <label for="gratification" class="form-label">Gratificación(*)</label>
                 <input type="text" class="form-control formatCurrency" id="gratification" name="gratification"
-                  placeholder="" value="" required>
+                  placeholder="" value="" required maxlength="11">
                 <div class="invalid-feedback">
                   Gratificación es requerida
                 </div>
@@ -88,7 +88,7 @@
               <div class="col-3" id="healthForecastAmountContainer">
                 <label for="healthForecastAmount" class="form-label">Monto</label>
                 <input type="text" class="form-control" id="healthForecastAmount" name="healthForecastAmount"
-                  placeholder="" value="" readonly>
+                  placeholder="" value="" readonly maxlength="10">
                 <div class="invalid-feedback">
                   Monto de previsión inválido
                 </div>

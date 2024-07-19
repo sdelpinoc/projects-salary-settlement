@@ -42,7 +42,7 @@ class SalarySettlement
       'exempt' => 1500478.76
     ],
     [
-      'maxAmount' => 99999999, // $99.999.999
+      'maxAmount' => 999999999, // $999.999.999
       'factor' => 0.4,
       'exempt' => 2497795.26
     ]
@@ -139,6 +139,9 @@ class SalarySettlement
       'healthForecastDiscount' => $this->formatNumberForDisplay($healthForecastDiscount),
 
       'incomeTax' => $this->formatNumberForDisplay($incomeTax),
+      'incomeTaxRaw' => $incomeTax,
+      'factor' => $factor,
+      'exempt' => $exempt,
 
       'transport' => $this->formatNumberForDisplay($validatedData['transport']),
       'collation' => $this->formatNumberForDisplay($validatedData['collation']),
