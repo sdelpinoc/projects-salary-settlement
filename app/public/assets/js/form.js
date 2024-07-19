@@ -113,7 +113,7 @@ healthForecast.addEventListener('change', ({
 
 baseSalary.addEventListener('blur', e => {
   const salary = e.target.value.replace(/[^\d]/g, '')
-  // console.log({salary})
+
   if (salary >= MIN_BASE_SALARY_FOR_COLLATION) {
     collationContainer.classList.add('hide')
   } else {
@@ -123,7 +123,7 @@ baseSalary.addEventListener('blur', e => {
 
 Array.from(healthForecastAmountTypes).map(amountType => {
   amountType.addEventListener('change', ({ target }) => {
-    console.log(target.value)
+
     if (target.value === 'pesos') {
       healthForecastAmount.addEventListener('focus', setFocusCurrencyFormat)
       healthForecastAmount.addEventListener('blur', setBlurCurrencyFormat)
@@ -157,7 +157,6 @@ form.addEventListener('submit', e => {
 
 function sendForm (formData) {
   const data = Object.fromEntries(formData.entries())
-  console.log({ data })
 
   showErrorMessage();
   toggleSendButton('pending')
@@ -172,12 +171,9 @@ function sendForm (formData) {
       }
     })
       .then(async response => {
-        console.log({
-          response
-        })
         try {
           const result = await response.json()
-          console.log({ result })
+
           return result
         } catch (error) {
           throw new Error('Ha ocurrido un error inesperado, intente nuevamente en unos minutos.')
