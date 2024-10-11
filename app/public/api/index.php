@@ -1,115 +1,63 @@
 <?php
-require_once dirname(__FILE__) . '../../classes/afp.php';
-require_once dirname(__FILE__) . '../../classes/healthForecast.php';
-require_once dirname(__FILE__) . '../../classes/SalarySettlement.php';
+require_once dirname(__FILE__) . "../../bootstrap.php";
+require_once dirname(__FILE__) . "../../controller/AfpController.php";
+require_once dirname(__FILE__) . "../../controller/HealthForecastController.php";
+require_once dirname(__FILE__) . "../../controller/SalarySettlementController.php";
 
-$aValidGetData = ['afp', 'healthForecast'];
-$aValidGetAction = ['get'];
+header("Access-Control-Allow-Origin: *");
+header("Content-Type: application/json; charset=UTF-8");
+header("Access-Control-Allow-Methods: OPTIONS,GET,POST,PUT,DELETE");
+header("Access-Control-Max-Age: 3600");
+header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
-$aValidPostData = ['salarySettlement'];
-$aValidPostAction = ['calculate'];
+// API Routes
+// GET
+// /afp,
+// /healthForecast
+// POST
+// /salarySettlement
 
-$input = file_get_contents('php://input');
+$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$uri = explode( '/', $uri );
 
-if (!isset($_GET)) {
-  sendResponse(1);
-} else if (
-  (!empty($_POST) && $_SERVER['REQUEST_METHOD'] == 'POST')
-  || ($input !== false && !empty($input))
-) {
-  $url = $_GET;
-  if (!isset($url['data']) || !isset($url['action'])) {
-    sendResponse(2);
-  }
+// print '<pre>';
+// print_r($uri);
+// print '</pre>';
+// (
+//   [0] => 
+//   [1] => api
+//   [2] => afp
+// )
+$validUris = [
+  'afp',
+  'healthForecast',
+  'salarySettlement'
+];
 
+if (!in_array($uri[2], $validUris)) {
+  header("HTTP/1.1 404 Not Found");
+  exit();
+}
+
+$requestMethod = $_SERVER["REQUEST_METHOD"];
+
+if (!in_array($requestMethod, ['GET', 'POST'])) {
+  header("HTTP/1.1 405 Method Not Allowed");
+  exit();
+}
+
+if ($uri[2] === 'afp') {
+  $controller = new AfpController($db, $requestMethod);
+} else if ($uri[2] === 'healthForecast') {
+  $controller = new HealthForecastController($db, $requestMethod);
+} else if ($uri[2] === 'salarySettlement') {
   if (!empty($_POST) && $_SERVER['REQUEST_METHOD'] == 'POST') {
     $postData = $_POST;
   } else {
     $postData = json_decode(file_get_contents('php://input'), true);
   }
 
-  $data = $url['data'];
-  $action = $url['action'];
-
-  if (!in_array($data, $aValidPostData) || !in_array($action, $aValidPostAction)) {
-    sendResponse(3);
-  }
-
-  if ($data === 'salarySettlement') {
-    switch ($action) {
-      case 'calculate':
-        // Validate form data
-        $salarySettlement = new SalarySettlement();
-
-        $validatedData = $salarySettlement->validate($postData);
-
-        if (!$validatedData['ok']) {
-          sendResponse(6, message: $validatedData['message']);
-        }
-
-        $calculatedSalary = $salarySettlement->calculate($validatedData['data']);
-
-        sendResponse(code: 4, ok: true, data: $calculatedSalary['data'], message: '');
-        break;
-
-      default:
-        sendResponse(5);
-        break;
-    }
-  }
-} else if (isset($_GET)) {
-  $url = $_GET;
-
-  if (!isset($url['data']) || !isset($url['action'])) {
-    sendResponse(2);
-  }
-
-  $data = $url['data'];
-  $action = $url['action'];
-
-  if (!in_array($data, $aValidGetData) || !in_array($action, $aValidGetAction)) {
-    sendResponse(3);
-  }
-
-  if ($data === 'afp') {
-    switch ($action) {
-      case 'get':
-        $afp = new Afp();
-        $data = $afp->get();
-
-        sendResponse(code: 4, ok: true, data: $data, message: '');
-        break;
-
-      default:
-        sendResponse(5);
-        break;
-    }
-  }
-
-  if ($data === 'healthForecast') {
-    switch ($action) {
-      case 'get':
-        $hf = new HealthForecast();
-        $data = $hf->get();
-        sendResponse(code: 4, ok: true, data: $data, message: '');
-        break;
-
-      default:
-        break;
-    }
-  }
+  $controller = new SalarySettlementController($db, $requestMethod, $postData);
 }
 
-function sendResponse($code, $ok = false, $data = array(), $message = 'Invalid request')
-{
-  $response = [
-    'ok' => $ok,
-    'code' => $code,
-    'data' => $data,
-    'message' => $message
-  ];
-
-  header('Content-type: application/json; charset=UTF-8');
-  print json_encode($response);
-  exit();
-}
+$controller->processRequest();

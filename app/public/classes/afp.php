@@ -1,9 +1,8 @@
 <?php
-require_once dirname(__FILE__) . '../../scripts/connection.php';
+require_once dirname(__FILE__) . '../../db/Connection.php';
 
 class Afp
 {
-
   private $connection;
 
   public function get()
@@ -13,7 +12,7 @@ class Afp
     $data = array();
 
     try {
-      $stmt = $this->connection->dbh->prepare('SELECT name, LOWER(value) AS value, rate FROM afp;');
+      $stmt = $this->connection->prepare('SELECT name, LOWER(value) AS value, rate FROM afp;');
 
       $stmt->execute();
 

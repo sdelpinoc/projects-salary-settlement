@@ -1,9 +1,8 @@
 <?php
-require_once dirname(__FILE__) . '../../scripts/connection.php';
+require_once dirname(__FILE__) . '../../db/Connection.php';
 
 class HealthForecast
 {
-
   private $connection;
 
   public function get()
@@ -13,7 +12,7 @@ class HealthForecast
     $data = array();
 
     try {
-      $stmt = $this->connection->dbh->prepare('SELECT name, code FROM health_forecast;');
+      $stmt = $this->connection->prepare('SELECT name, code FROM health_forecast;');
 
       $stmt->execute();
 

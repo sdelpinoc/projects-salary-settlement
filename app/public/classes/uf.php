@@ -1,15 +1,15 @@
 <?php
-require_once dirname(__FILE__) . '../../scripts/connection.php';
+require_once dirname(__FILE__) . '../../db/Connection.php';
 
 class Uf
 {
   private $months;
   private $url;
-  private $connection;
+  private $db;
 
   public function __construct()
   {
-    $this->months = array(
+    $this->months = [
       '01' => 'enero',
       '02' => 'febrero',
       '03' => 'marzo',
@@ -22,9 +22,11 @@ class Uf
       '10' => 'octubre',
       '11' => 'noviembre',
       '12' => 'diciembre',
-    );
+    ];
 
     $this->url = 'https://www.sii.cl/valores_y_fechas/uf/uf2024.htm';
+
+    $this->db;
   }
 
   /**
@@ -75,12 +77,8 @@ class Uf
 
   public function getUfFromDB($year, $month)
   {
-    $this->connection = new Connection();
-
-    $data = array();
-
     try {
-      $stmt = $this->connection->dbh->prepare('
+      $stmt = $this->db->prepare('
         SELECT
           year,
           month,
@@ -98,19 +96,15 @@ class Uf
 
       $stmt->execute();
 
-      $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+      return $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (PDOException $e) {
-      print $e->getMessage();
+      exit($e->getMessage());
     }
-
-    return $data;
   }
 
   public function getUfFromUrlAndSaveInBD()
   {
     $result = array();
-
-    $this->connection = new Connection();
 
     $getUf = $this->getUfFromUrl();
 
@@ -120,7 +114,7 @@ class Uf
     }
   
     try {
-      $stmt = $this->connection->dbh->prepare('INSERT INTO uf (year, month, uf) VALUES (:year, :month, :uf);');
+      $stmt = $this->db->prepare('INSERT INTO uf (year, month, uf) VALUES (:year, :month, :uf);');
   
       $stmt->bindParam(':year', $getUf['year']);
       $stmt->bindParam(':month', $getUf['month']);
@@ -131,7 +125,7 @@ class Uf
       $result['ok'] = true;
       $result['uf'] = $getUf['ufLastDay'];
     } catch (PDOException $e) {
-      print $e->getMessage();
+      exit($e->getMessage());
     }
 
     return $result;

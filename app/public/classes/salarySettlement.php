@@ -7,7 +7,7 @@ class SalarySettlement
 {
   private $RANGES = [
     [
-      'maxAmount' =>  868630.5,
+      'maxAmount' => 868630.5,
       'factor' => 0,
       'exempt' => 0
     ],
@@ -78,7 +78,7 @@ class SalarySettlement
     $ufLastDay = $uf->getUfFromDB(year: date('Y'), month: date('m'));
 
     $ufValue = $this->UF;
- 
+
     if (isset($ufLastDay[0]) && isset($ufLastDay[0]['uf'])) {
       $ufValue = $ufLastDay[0]['uf'];
     } else {
@@ -166,17 +166,17 @@ class SalarySettlement
 
     if (
       !isset($formData['baseSalary'])
-      && !isset($formData['gratification'])
-      && !isset($formData['afp'])
-      && !isset($formData['afpPercentage'])
-      && !isset($formData['healthForecast'])
-      && !isset($formData['healthForecastPercentage'])
-      && !isset($formData['healthForecastAmountType'])
-      && !isset($formData['healthForecastAmount'])
-      && !isset($formData['transport'])
-      && !isset($formData['collation'])
+      || !isset($formData['gratification'])
+      || !isset($formData['afp'])
+      || !isset($formData['afpPercentage'])
+      || !isset($formData['healthForecast'])
+      || !isset($formData['healthForecastPercentage'])
+      || !isset($formData['healthForecastAmountType'])
+      || !isset($formData['healthForecastAmount'])
+      || !isset($formData['transport'])
+      || !isset($formData['collation'])
     ) {
-      $response['message'] = 'Information is missing';
+      $response['message'] = 'Falta información para calcular la liquidación';
       return $response;
     }
 
@@ -244,7 +244,8 @@ class SalarySettlement
         $healthForecastAmount = strtr($healthForecastAmount, $replace);
 
         if (!$this->isBetween($healthForecastAmount, $this->MIN_AMOUNT_HC_UF, $this->MAX_AMOUNT_HC_UF)) {
-          $response['message'] = 'Monto inválido de Sistema de salud [' . $this->formatNumberForDisplay($this->MIN_AMOUNT_HC_UF) . ' UF - ' . $this->formatNumberForDisplay($this->MAX_AMOUNT_HC_UF) . ' UF]';;
+          $response['message'] = 'Monto inválido de Sistema de salud [' . $this->formatNumberForDisplay($this->MIN_AMOUNT_HC_UF) . ' UF - ' . $this->formatNumberForDisplay($this->MAX_AMOUNT_HC_UF) . ' UF]';
+          ;
           return $response;
         }
       } else {
@@ -259,7 +260,7 @@ class SalarySettlement
       $healthForecastPercentage = 0;
     }
 
-    $transport = (int)preg_replace('/[^\d]+/', '', $formData['transport']);
+    $transport = (int) preg_replace('/[^\d]+/', '', $formData['transport']);
 
     if ($transport !== $this->TRANSPORT_AMOUNT) {
       $response['message'] = 'Monto de transporte inválido';
@@ -267,7 +268,7 @@ class SalarySettlement
     }
 
     if ($baseSalary < $this->MIN_BASE_SALARY_FOR_COLLATION) {
-      $collation = (int)preg_replace('/[^\d]+/', '', $formData['collation']);
+      $collation = (int) preg_replace('/[^\d]+/', '', $formData['collation']);
 
       if ($collation !== $this->COLLATION_AMOUNT) {
         $response['message'] = 'Monto de colación inválido';

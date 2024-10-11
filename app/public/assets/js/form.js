@@ -26,50 +26,57 @@ const HEALTH_FORECAST_AMOUNT_TYPE_UF = 'uf'
 const MIN_BASE_SALARY_FOR_COLLATION = 1200000
 
 // Form setup
-const afpData = fetch('/api/?data=afp&action=get')
-  .then(response => response.json())
-  .then(result => {
-    const { data: afpRates, ok } = result
-
-    if (ok) {
-      afpRates.map(({ name, value }) => {
-        const option = document.createElement('option')
-        option.text = name
-        option.value = value
-        afp.append(option)
-      })
-
-      afp.addEventListener('change', e => {
-        const afp = afpRates.find(afpRate => afpRate.value === e.target.value)
-        afpPercentage.value = afp ? afp.rate + '%' : ''
-      })
-    } else {
-      const option = document.createElement('option')
-      option.text = 'No se pudo cargar la información, intente nuevamente en unos minutos'
-      afp.append(option)
+const afpData = fetch('/api/afp')
+  .then(response => {
+    if (!response.ok || response.status !== 200) {
+      throw new Error('No se pudo cargar la información, intente nuevamente en unos minutos')
     }
-  });
 
-const healthForecastData = fetch('/api/?data=healthForecast&action=get')
-  .then(response => response.json())
-  .then(result => {
-    const { data: institutions, ok } = result
+    return response.json()
+  })
+  .then(afps => {
+    console.log({ afps })
 
+    afps.map(({ name, value }) => {
+      const option = document.createElement('option')
+      option.text = name
+      option.value = value
+      afp.append(option)
+    })
+
+    afp.addEventListener('change', e => {
+      const afp = afps.find(afpRate => afpRate.value === e.target.value)
+      afpPercentage.value = afp ? afp.rate + '%' : ''
+    })
+  }).catch(error => {
+    // console.log({ error })
+    const option = document.createElement('option')
+    option.text = 'No se pudo cargar la información, intente nuevamente en unos minutos'
+    afp.append(option)
+  })
+
+const healthForecastData = fetch('/api/healthForecast')
+  .then(response => {
+    if (!response.ok || response.status !== 200) {
+      throw new Error('No se pudo cargar la información, intente nuevamente en unos minutos')
+    }
+
+    return response.json()
+  })
+  .then(institutions => {
     const institutionsOrdered = institutions.sort((a, b) => a['name'].localeCompare(b['name']))
 
-    if (ok) {
-      institutionsOrdered.map(({ code, name }) => {
-        const option = document.createElement('option')
-        option.value = `${code}-${name}`
-        option.text = name
-        healthForecast.append(option)
-      })
-    } else {
+    institutionsOrdered.map(({ code, name }) => {
       const option = document.createElement('option')
-      option.value = ''
-      option.text = 'No se pudo cargar la información, intente nuevamente en unos minutos'
+      option.value = `${code}-${name}`
+      option.text = name
       healthForecast.append(option)
-    }
+    })
+  }).catch(error => {
+    // console.log({ error })
+    const option = document.createElement('option')
+    option.text = 'No se pudo cargar la información, intente nuevamente en unos minutos'
+    healthForecast.append(option)
   })
 
 setInputsEventCurrencyFormat()
@@ -155,7 +162,7 @@ form.addEventListener('submit', e => {
   sendForm(formData)
 })
 
-function sendForm (formData) {
+function sendForm(formData) {
   const data = Object.fromEntries(formData.entries())
 
   showErrorMessage();
@@ -194,7 +201,7 @@ function sendForm (formData) {
   })
 }
 
-function displaySalarySettlement (dataToDisplay = {}) {
+function displaySalarySettlement(dataToDisplay = {}) {
   document.querySelector('#resultBaseSalary').textContent = `$${dataToDisplay['baseSalary']}`
   document.querySelector('#resultGratification').textContent = `$${dataToDisplay['gratification']}`
   document.querySelector('#resultTransport').textContent = `$${dataToDisplay['transport']}`
@@ -218,7 +225,7 @@ function displaySalarySettlement (dataToDisplay = {}) {
   toggleResult('show')
 }
 
-function showErrorMessage (message = '') {
+function showErrorMessage(message = '') {
   if (message.length > 0) {
     formError.classList.add('show')
     formError.classList.remove('hide')
@@ -231,7 +238,7 @@ function showErrorMessage (message = '') {
   formError.classList.add('hide')
 }
 
-function toggleSendButton (status = '') {
+function toggleSendButton(status = '') {
   const buttonSpinner = document.querySelector('#buttonSpinner')
   const buttonText = document.querySelector('#buttonText')
   if (status === 'pending') {
@@ -244,7 +251,7 @@ function toggleSendButton (status = '') {
   buttonText.textContent = 'Calcular'
 }
 
-function toggleResult (action = 'show') {
+function toggleResult(action = 'show') {
   if (action === 'show') {
     result.classList.add('d-flex', 'justify-content-center')
     result.classList.remove('hide')
@@ -259,7 +266,7 @@ function toggleResult (action = 'show') {
   result.classList.remove('d-flex', 'justify-content-center')
 }
 
-function setCurrencyFormat (number = 0) {
+function setCurrencyFormat(number = 0) {
   const chileanPeso = new Intl.NumberFormat('es-CL', {
     style: 'currency',
     currency: 'CLP',
@@ -269,7 +276,7 @@ function setCurrencyFormat (number = 0) {
   return number.length > 0 ? chileanPeso.format(number) : ''
 }
 
-function setInputsEventCurrencyFormat () {
+function setInputsEventCurrencyFormat() {
   const inputs = document.querySelectorAll('.formatCurrency')
 
   Array.from(inputs).map(input => {
@@ -281,15 +288,15 @@ function setInputsEventCurrencyFormat () {
   })
 }
 
-function setBlurCurrencyFormat ({ target }) {
+function setBlurCurrencyFormat({ target }) {
   target.value = setCurrencyFormat(target.value.replace(/[^\d]/g, ''))
 }
 
-function setFocusCurrencyFormat ({ target }) {
+function setFocusCurrencyFormat({ target }) {
   target.value = target.value.replace(/[^\d]/g, '')
 }
 
-function setBlurCurrencyFormatUf ({ target }) {
+function setBlurCurrencyFormatUf({ target }) {
   const number = target.value.replace(/[^\d,]/g, '').split(',')
 
   const input = number[0] ? setCurrencyFormat(number[0]) : setCurrencyFormat(number)
@@ -299,11 +306,11 @@ function setBlurCurrencyFormatUf ({ target }) {
   target.value = formatInput + ' UF'
 }
 
-function setFocusCurrencyFormatUf ({ target }) {
+function setFocusCurrencyFormatUf({ target }) {
   target.value = target.value.replace(/[^\d,]/g, '')
 }
 
-function sleep (seconds) {
+function sleep(seconds) {
   return new Promise(resolve => {
     setTimeout(() => {
       resolve(true)
