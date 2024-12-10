@@ -4,8 +4,8 @@ require_once dirname(__FILE__) . '../../db/Connection.php';
 class Uf
 {
   private $months;
-  private $url;
-  private $db;
+  private $apiUrl;
+  private $db = null;
 
   public function __construct()
   {
@@ -24,53 +24,51 @@ class Uf
       '12' => 'diciembre',
     ];
 
-    $this->url = 'https://www.sii.cl/valores_y_fechas/uf/uf2024.htm';
-
-    $this->db;
+    $this->apiUrl = 'https://mindicador.cl/api/uf';
   }
 
   /**
-   * Get the uf value of the last day of the actual month
-   * 
-   * @return array $result
+   * Fetches the UF (Unidad de Fomento) value for the last day of the current month
+   * from the mindicador.cl API. If the value for the last day is not available,
+   * it fetches the UF value for the current day. Returns an associative array
+   * containing the status, the UF value, the current month, and year.
+   *
+   * @return array {
+   *     @type bool   $ok        Indicates if the operation was successful.
+   *     @type float  $ufLastDay UF value for the last day of the current month or current day.
+   *     @type string $month     Current month in "mm" format.
+   *     @type string $year      Current year in "YYYY" format.
+   * }
    */
-  public function getUfFromUrl()
+  public function getUFFromApi()
   {
-    $result = array();
+    $result = [
+      'ok' => false
+    ];
 
-    $content = file_get_contents($this->url);
-    $doc = new DOMDocument();
-    $searchPage = mb_convert_encoding($content, "UTF-8");
+    // https://mindicador.cl/api/{tipo_indicador}/{dd-mm-yyyy}
+    $date = new DateTime('now');
+    $date->modify('last day of this month');
+    $lastDayOfMonth = $date->format('d-m-Y'); // To use in the API
 
-    $doc->loadHTML($searchPage);
-    // echo $doc->saveHTML();
+    $url = "{$this->apiUrl}/{$lastDayOfMonth}";
+    $content = file_get_contents($url);
+    $result = json_decode($content, true);
 
-    $actualMonth = date("m"); // 07 -> July
-    $actualYear = date("Y"); // 2024
-
-    $titles = iterator_to_array($doc->getElementsByTagName('h2'));
-
-    if ($titles[0]->nodeValue !== 'UF ' . $actualYear) {
-      $result['ok'] = false;
-      return $result;
+    if (empty($result['serie'])) {
+      $date = new DateTime('now');
+      $currentDay = $date->format('d-m-Y');
+      $url = "{$this->apiUrl}/{$currentDay}";
+      $content = file_get_contents($url);
+      $result = json_decode($content, true);
     }
 
-    $actualTableMonth = $doc->getElementById("mes_" . $this->months[$actualMonth]);
-
-    $actualTableMonthClean = preg_replace('/[\s]+/', ' ', trim($actualTableMonth->nodeValue));
-    $onlyUfValues = preg_replace('/\s\d{1,2}\s/', ' ', $actualTableMonthClean);
-
-    $ufByDay = explode(' ', $onlyUfValues);
-
-    $replace = array(',' => '.', '.' => '');
-    $ufLastDay = strtr(end($ufByDay), $replace);
-
-    $result = array(
+    $result = [
       'ok' => true,
-      'ufLastDay' => $ufLastDay,
-      'month' => $actualMonth,
-      'year' => $actualYear
-    );
+      'ufLastDay' => $result['serie'][0]['valor'],
+      'month' => $date->format('m'),
+      'year' => $date->format('Y')
+    ];
 
     return $result;
   }
@@ -78,7 +76,10 @@ class Uf
   public function getUfFromDB($year, $month)
   {
     try {
-      $stmt = $this->db->prepare('
+      $this->db = new Connection();
+      $db = $this->db->getConnection();
+
+      $stmt = $db->prepare('
         SELECT
           year,
           month,
@@ -104,22 +105,25 @@ class Uf
 
   public function getUfFromUrlAndSaveInBD()
   {
-    $result = array();
+    $result = [];
 
-    $getUf = $this->getUfFromUrl();
+    $getUf = $this->getUFFromApi();
 
     if (!$getUf['ok']) {
       $result['ok'] = false;
       return $result;
     }
-  
+
     try {
-      $stmt = $this->db->prepare('INSERT INTO uf (year, month, uf) VALUES (:year, :month, :uf);');
-  
+      $this->db = new Connection();
+      $db = $this->db->getConnection();
+
+      $stmt = $db->prepare('INSERT INTO uf (year, month, uf) VALUES (:year, :month, :uf);');
+
       $stmt->bindParam(':year', $getUf['year']);
       $stmt->bindParam(':month', $getUf['month']);
       $stmt->bindParam(':uf', $getUf['ufLastDay']);
-  
+
       $stmt->execute();
 
       $result['ok'] = true;

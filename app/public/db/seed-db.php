@@ -1,13 +1,14 @@
 <?php
 if (isset($_GET['access']) && $_GET['access'] === 'seed') {
   require_once dirname(__FILE__) . '../../classes/uf.php';
-  require_once dirname(__FILE__) . '/connection.php';
+  require_once dirname(__FILE__) . '/Connection.php';
 
-  $dbConnection = new Connection();
+  $connection = new Connection();
+  $db = $connection->getConnection();
 
   // Create afp and health_forecast tables
   try {
-    $stmt = $dbConnection->dbh->prepare('
+    $stmt = $db->prepare('
       CREATE OR REPLACE TABLE afp (
         id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
@@ -20,7 +21,7 @@ if (isset($_GET['access']) && $_GET['access'] === 'seed') {
 
     print 'Table afp created...<br />';
 
-    $stmt = $dbConnection->dbh->prepare('
+    $stmt = $db->prepare('
       CREATE OR REPLACE TABLE health_forecast (
         id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
@@ -33,7 +34,7 @@ if (isset($_GET['access']) && $_GET['access'] === 'seed') {
     print 'Table health_forecast created...<br />';
 
     // Create table uf
-    $stmt = $dbConnection->dbh->prepare('
+    $stmt = $db->prepare('
       CREATE OR REPLACE TABLE uf (
         id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
         year INT NOT NULL,
@@ -53,28 +54,33 @@ if (isset($_GET['access']) && $_GET['access'] === 'seed') {
   }
 
   // Insert afp
-  $afps = array(
+  $afps = [
     [
       'name' => 'AFP Capital',
       'value' => 'Capital',
       'rate' => 11.44
-    ], [
+    ],
+    [
       'name' => 'AFP Cuprum',
       'value' => 'Cuprum',
       'rate' => 11.44
-    ], [
+    ],
+    [
       'name' => 'AFP Habitat',
       'value' => 'Habitat',
       'rate' => 11.27
-    ], [
+    ],
+    [
       'name' => 'AFP Modelo',
       'value' => 'Modelo',
       'rate' => 10.58
-    ], [
+    ],
+    [
       'name' => 'AFP PlanVital',
       'value' => 'PlanVital',
       'rate' => 11.16
-    ], [
+    ],
+    [
       'name' => 'AFP ProVida',
       'value' => 'ProVida',
       'rate' => 11.45
@@ -84,11 +90,11 @@ if (isset($_GET['access']) && $_GET['access'] === 'seed') {
       'value' => 'Uno',
       'rate' => 10.49
     ]
-  );
+  ];
 
   try {
     foreach ($afps as $afp) {
-      $stmt = $dbConnection->dbh->prepare('INSERT INTO afp (name, value, rate) VALUES (:name, :value, :rate)');
+      $stmt = $db->prepare('INSERT INTO afp (name, value, rate) VALUES (:name, :value, :rate)');
 
       $stmt->bindParam(':name', $afp['name']);
       $stmt->bindParam(':value', $afp['value']);
@@ -106,7 +112,7 @@ if (isset($_GET['access']) && $_GET['access'] === 'seed') {
   }
 
   // Insert healthForecast
-  $healthForecasts = array(
+  $healthForecasts = [
     [
       'code' => '101',
       'name' => 'Banmédica'
@@ -167,11 +173,11 @@ if (isset($_GET['access']) && $_GET['access'] === 'seed') {
       'code' => '830',
       'name' => 'Esencial'
     ]
-  );
+  ];
 
   try {
     foreach ($healthForecasts as $hf) {
-      $stmt = $dbConnection->dbh->prepare('INSERT INTO health_forecast (name, code) VALUES (:name, :code)');
+      $stmt = $db->prepare('INSERT INTO health_forecast (name, code) VALUES (:name, :code)');
 
       $stmt->bindParam(':name', $hf['name']);
       $stmt->bindParam(':code', $hf['code']);
@@ -190,7 +196,7 @@ if (isset($_GET['access']) && $_GET['access'] === 'seed') {
   // Insert UF
   $uf = new Uf();
 
-  $getUf = $uf->getUfFromUrl();
+  $getUf = $uf->getUFFromApi();
 
   if (!$getUf['ok']) {
     print 'The value of the uf could not be obtained...';
@@ -198,7 +204,7 @@ if (isset($_GET['access']) && $_GET['access'] === 'seed') {
   }
 
   try {
-    $stmt = $dbConnection->dbh->prepare('INSERT INTO uf (year, month, uf) VALUES (:year, :month, :uf);');
+    $stmt = $db->prepare('INSERT INTO uf (year, month, uf) VALUES (:year, :month, :uf);');
 
     $stmt->bindParam(':year', $getUf['year']);
     $stmt->bindParam(':month', $getUf['month']);

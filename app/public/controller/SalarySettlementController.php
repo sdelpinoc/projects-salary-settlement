@@ -4,7 +4,6 @@ class SalarySettlementController
 {
   private $db;
   private $requestMethod;
-
   private $data;
 
   public function __construct($db, $requestMethod, $data)
@@ -36,11 +35,13 @@ class SalarySettlementController
   private function calculate()
   {
     // print '<pre>';
+    // print '$this->data:';
     // print_r($this->data);
     // print '</pre>';
     $salarySettlement = new SalarySettlement();
     $validatedData = $salarySettlement->validate($this->data);
     // print '<pre>';
+    // print '$validatedData:';
     // print_r($validatedData);
     // print '</pre>';
 
@@ -48,7 +49,14 @@ class SalarySettlementController
       return ['status_code_header' => 'HTTP/1.1 200 OK', 'body' => json_encode($validatedData)];
     }
 
-    $response = ['status_code_header' => 'HTTP/1.1 200 OK', 'body' => null];
+    $calculatedSalary = $salarySettlement->calculate($validatedData['data']);
+    // print '<pre>';
+    // print '$calculatedSalary:';
+    // print_r($calculatedSalary);
+    // print '</pre>';
+
+    // header('Content-type: application/json; charset=UTF-8');
+    $response = ['status_code_header' => 'HTTP/1.1 200 OK', 'body' => json_encode($calculatedSalary['data'])];
 
     return $response;
   }

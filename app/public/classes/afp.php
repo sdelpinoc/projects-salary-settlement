@@ -3,16 +3,17 @@ require_once dirname(__FILE__) . '../../db/Connection.php';
 
 class Afp
 {
-  private $connection;
+  private $db = null;
 
-  public function get()
+  public function getAll()
   {
-    $this->connection = new Connection();
+    $this->db = new Connection();
+    $db = $this->db->getConnection();
 
-    $data = array();
+    $data = [];
 
     try {
-      $stmt = $this->connection->prepare('SELECT name, LOWER(value) AS value, rate FROM afp;');
+      $stmt = $db->prepare('SELECT name, LOWER(value) AS value, rate FROM afp;');
 
       $stmt->execute();
 

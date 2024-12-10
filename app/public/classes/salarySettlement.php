@@ -1,7 +1,8 @@
 <?php
-require_once dirname(__FILE__) . '/afp.php';
-require_once dirname(__FILE__) . '/healthForecast.php';
-require_once dirname(__FILE__) . '/uf.php';
+require_once dirname(__FILE__) . '/Afp.php';
+// require_once dirname(__FILE__) . '../tableGateways/AfpGateway.php';
+require_once dirname(__FILE__) . '/HealthForecast.php';
+require_once dirname(__FILE__) . '/Uf.php';
 
 class SalarySettlement
 {
@@ -50,7 +51,7 @@ class SalarySettlement
 
   private $MIN_BASE_SALARY_FOR_COLLATION = 1200000;
   private $AFP_FONASA_CODE = '122';
-  private $VALID_HEALTH_FORECAST_AMOUNT_TYPES = array('pesos', 'uf');
+  private $VALID_HEALTH_FORECAST_AMOUNT_TYPES = ['pesos', 'uf'];
   private $HEALTH_FORECAST_AMOUNT_TYPE_UF = 'uf';
   private $TRANSPORT_AMOUNT = 36000;
   private $COLLATION_AMOUNT = 52000;
@@ -69,9 +70,9 @@ class SalarySettlement
   private $MIN_AMOUNT_HC_UF = 1; // 1 UF
   private $MAX_AMOUNT_HC_UF = 99; // 99 UF
 
-  public function calculate($validatedData = array())
+  public function calculate($validatedData = [])
   {
-    $response = array();
+    $response = [];
 
     $uf = new Uf();
 
@@ -125,7 +126,7 @@ class SalarySettlement
 
     $netSalary = $taxableIncome - $totalDuties;
 
-    $dataToDisplay = array(
+    $dataToDisplay = [
       'baseSalary' => $this->formatNumberForDisplay($validatedData['baseSalary']),
       'gratification' => $this->formatNumberForDisplay($validatedData['gratification']),
 
@@ -149,20 +150,20 @@ class SalarySettlement
       'totalAssets' => $this->formatNumberForDisplay($taxableIncome),
       'totalDuties' => $this->formatNumberForDisplay($totalDuties),
       'netSalary' => $this->formatNumberForDisplay($netSalary)
-    );
+    ];
 
     $response['data'] = $dataToDisplay;
 
     return $response;
   }
 
-  public function validate($formData = array())
+  public function validate($formData = [])
   {
-    $response = array(
+    $response = [
       'ok' => false,
       'message' => '',
-      'data' => array()
-    );
+      'data' => []
+    ];
 
     if (
       !isset($formData['baseSalary'])
@@ -201,7 +202,7 @@ class SalarySettlement
     $afp = $formData['afp'];
 
     $afpObject = new Afp();
-    $afps = $afpObject->get();
+    $afps = $afpObject->getAll();
 
     $foundAfp = array_search(strtolower($afp), array_column($afps, 'value'));
 
@@ -215,7 +216,7 @@ class SalarySettlement
     $healthForecast = explode('-', $formData['healthForecast']);
 
     $hf = new HealthForecast();
-    $hfs = $hf->get();
+    $hfs = $hf->getAll();
 
     $foundHFCode = array_search($healthForecast[0], array_column($hfs, 'code'));
 
@@ -240,7 +241,7 @@ class SalarySettlement
       if ($healthForecastAmountType === $this->HEALTH_FORECAST_AMOUNT_TYPE_UF) {
         $healthForecastAmount = preg_replace('/[^\d,]+/', '', $formData['healthForecastAmount']);
 
-        $replace = array(',' => '.', '.' => '');
+        $replace = [',' => '.', '.' => ''];
         $healthForecastAmount = strtr($healthForecastAmount, $replace);
 
         if (!$this->isBetween($healthForecastAmount, $this->MIN_AMOUNT_HC_UF, $this->MAX_AMOUNT_HC_UF)) {
@@ -252,7 +253,6 @@ class SalarySettlement
         $healthForecastAmount = preg_replace('/[^\d]+/', '', $formData['healthForecastAmount']);
         if (!$this->isBetween($healthForecastAmount, $this->MIN_AMOUNT_HC_PESOS, $this->MAX_AMOUNT_HC_PESOS)) {
           $response['message'] = 'Monto inválido de Sistema de salud [$' . $this->formatNumberForDisplay($this->MIN_AMOUNT_HC_PESOS) . ' - $' . $this->formatNumberForDisplay($this->MAX_AMOUNT_HC_PESOS) . ']';
-          return $response;
           return $response;
         }
       }
@@ -278,7 +278,7 @@ class SalarySettlement
       $collation = 0;
     }
 
-    $validatedData = array(
+    $validatedData = [
       'baseSalary' => $baseSalary,
       'gratification' => $gratification,
 
@@ -293,7 +293,7 @@ class SalarySettlement
 
       'transport' => $transport,
       'collation' => $collation
-    );
+    ];
 
     $response['ok'] = true;
     $response['data'] = $validatedData;

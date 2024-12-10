@@ -35,8 +35,6 @@ const afpData = fetch('/api/afp')
     return response.json()
   })
   .then(afps => {
-    console.log({ afps })
-
     afps.map(({ name, value }) => {
       const option = document.createElement('option')
       option.text = name
@@ -48,8 +46,7 @@ const afpData = fetch('/api/afp')
       const afp = afps.find(afpRate => afpRate.value === e.target.value)
       afpPercentage.value = afp ? afp.rate + '%' : ''
     })
-  }).catch(error => {
-    // console.log({ error })
+  }).catch(_ => {
     const option = document.createElement('option')
     option.text = 'No se pudo cargar la información, intente nuevamente en unos minutos'
     afp.append(option)
@@ -170,29 +167,27 @@ function sendForm(formData) {
   toggleResult('')
 
   sleep(2).then(() => {
-    fetch('/api/?data=salarySettlement&action=calculate', {
+    fetch('/api/salarySettlement', {
       method: 'POST',
       body: JSON.stringify(data),
       headers: {
         'Content-Type': 'application/json'
       }
     })
-      .then(async response => {
-        try {
-          const result = await response.json()
-
-          return result
-        } catch (error) {
-          throw new Error('Ha ocurrido un error inesperado, intente nuevamente en unos minutos.')
+      .then(response => {
+        if (!response.ok || response.status !== 200) {
+          throw new Error('No se pudo calcular su liquidación, intente nuevamente en unos minutos')
         }
+
+        return response.json()
       })
       .then(result => {
-        if (!result.ok) {
-          showErrorMessage('No se pudo calcular su liquidación. ' + result.message)
-          return
-        }
+        // if (!result.ok) {
+        //   showErrorMessage('No se pudo calcular su liquidación. ' + result.message)
+        //   return
+        // }
 
-        displaySalarySettlement(result.data)
+        displaySalarySettlement(result)
       }).catch(error => {
         showErrorMessage(error.message)
       }).finally(() => {

@@ -4,7 +4,7 @@ services:
   webserver:
     image: nginx:1.27.0-perl
     ports:
-      - "80:80" # HOST:CONTAINER
+      - "81:80" # HOST:CONTAINER
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/nginx.conf
       - ./app:/app
@@ -27,7 +27,7 @@ services:
     volumes:
       - ./mysqldata:/var/lib/mysql
     ports:
-      - 3306:3306
+      - 3307:3306
 
   phpmyadmin:
     depends_on:
@@ -39,7 +39,7 @@ services:
       PMA_ARBITRARY: 1
       # PM_HOST: db
     ports:
-      - "8080:80"
+      - "8081:80"
 
 # volumes:
 #   mysqldata: {}

@@ -5,5 +5,4 @@ phpmyadmindata
 .env
 
 Notes.md
-
-app/public/scripts/get-uf.php
+test.php

@@ -37,7 +37,6 @@ class UfGateway
     }
   }
 
-  // $getUf = $this->getUfFromUrl(); // TODO: Get from params
   public function insert($getUf)
   {
     if (!$getUf['ok']) {
